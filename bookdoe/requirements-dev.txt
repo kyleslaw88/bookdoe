@@ -1,0 +1,5 @@
+-r requirements.txt
+# Test-only tools. Not installed in the Docker image; production pins stay in requirements.txt.
+pytest
+pytest-xdist==3.8.0
+pytest-timeout==2.4.0

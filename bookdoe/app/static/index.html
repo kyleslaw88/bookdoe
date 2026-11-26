@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>{{app_name}}</title>
+  <meta name="description" content="Your ebook and audiobook library: read and listen from the shelf, online or off." />
+  <!-- PWA: installable from Chromium/Android via the manifest; iOS Safari ignores most
+       of the manifest and needs the apple-* tags below for a standalone home-screen app. -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)" />
+  <meta name="application-name" content="{{app_name}}" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="{{app_name}}" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/svg+xml" href="/assets/brand/bookdoe-mark.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div id="auth-shell" class="auth-shell hidden"></div>
+  <div id="app-shell" class="app-shell hidden">
+    <div id="nav-backdrop" class="nav-backdrop" hidden></div>
+    <aside id="sidebar" class="sidebar">
+      <div class="brand">
+        <img class="brand-h-img brand-h on-light" src="/assets/brand/bookdoe-horizontal-light.svg" alt="" height="30" /><img class="brand-h-img brand-h on-dark" src="/assets/brand/bookdoe-horizontal-dark.svg" alt="" height="30" /><img class="brand-mark brand-mark-img" src="/assets/brand/bookdoe-mark.svg" alt="" width="34" height="34" />
+        <div class="brand-name"><strong>{{app_name}}</strong><span>Management</span></div><span class="brand-sub">Management</span>
+        <button id="nav-close" class="icon-button nav-close" aria-label="Close navigation">×</button>
+      </div>
+      <nav id="nav" class="nav"></nav>
+      <div class="sidebar-bottom">
+        <div id="health-pill" class="health-pill"><i></i><span>Checking services…</span></div>
+        <button id="theme-toggle" class="icon-button" title="Toggle theme" aria-label="Toggle theme">◐</button>
+      </div>
+      <div class="sidebar-build"><button id="build-chip" class="build-chip" type="button" aria-label="Build information, tap to copy"><span id="build-chip-text">{{app_name}} …</span></button><button id="build-update" class="build-update hidden" type="button">Update</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="mobile-brand"><button id="menu-toggle" class="icon-button">☰</button><strong>{{app_name}}</strong></div>
+        <div class="global-search">
+          <span>⌕</span><input id="global-search" type="search" enterkeyhint="search" autocomplete="off" placeholder="Search your library…" />
+        </div>
+        <div class="top-actions">
+          <a class="button ghost compact" id="open-player-topbar" href="/app" title="Switch to the Player">▶ Player</a>
+          <button class="button ghost compact" id="add-books-topbar" data-route="discover">＋ Add books</button>
+          <button id="user-button" class="user-button" aria-label="User menu"></button>
+        </div>
+      </header>
+      <section id="view" class="view"></section>
+    </main>
+  </div>
+  <div id="toast-stack" class="toast-stack" role="status" aria-live="polite"></div>
+  <div id="modal-root"></div>
+  <!-- P4-06c: Contributors with role labels rendered in app.js studioFieldValue; no HTML changes needed -->
+  <!-- P4-06e: cover controls migrated to Metadata Studio workspace in app.js; no HTML changes needed -->
+  <script src="/assets/pwa.js"></script>
+  <script type="module" src="/assets/app.js"></script>
+</body>
+</html>

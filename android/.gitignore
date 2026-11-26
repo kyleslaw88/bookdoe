@@ -1,0 +1,14 @@
+# Build output and IDE state
+build/
+.gradle/
+.idea/
+*.iml
+local.properties
+.kotlin/
+captures/
+# Signing material must never be committed
+*.jks
+*.keystore
+*.p12
+*.pem
+play-service-account*.json

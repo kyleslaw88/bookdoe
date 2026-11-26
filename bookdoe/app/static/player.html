@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <title>{{app_name}}</title>
+  <meta name="description" content="Your ebook and audiobook library: read and listen from the shelf, online or off." />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)" />
+  <meta name="application-name" content="{{app_name}}" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="{{app_name}}" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/svg+xml" href="/assets/brand/bookdoe-mark.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="/assets/player.css" />
+</head>
+<body class="player-body">
+  <div id="pl-auth" class="pl-gate hidden"></div>
+  <div id="pl-app" class="pl-app hidden">
+    <header class="pl-top">
+      <a class="pl-brand" href="#home" aria-label="{{app_name}}"><img class="pl-logo-h brand-h on-light" src="/assets/brand/bookdoe-horizontal-light.svg" alt="" height="30" /><img class="pl-logo-h brand-h on-dark" src="/assets/brand/bookdoe-horizontal-dark.svg" alt="" height="30" /><img class="pl-logo brand-mark-img" src="/assets/brand/bookdoe-mark.svg" alt="" width="30" height="30" /><span class="brand-name">{{app_name}}</span></a>
+      <div class="pl-top-actions">
+        <span id="pl-offline" class="pl-offline hidden" title="You are offline">offline</span>
+        <button id="pl-theme" class="pl-icon" aria-label="Toggle theme" title="Theme">◐</button>
+        <button id="pl-account" class="pl-avatar" aria-label="Account"></button>
+      </div>
+    </header>
+    <div id="pl-update" class="pl-update hidden" role="status"></div>
+    <main id="pl-view" class="pl-view" aria-live="polite"></main>
+    <div id="pl-mini" class="pl-mini hidden" role="region" aria-label="Now playing"></div>
+    <nav id="pl-nav" class="pl-nav" data-brand-name="{{app_name}}" aria-label="Primary"></nav>
+  </div>
+  <div id="pl-toast" class="pl-toast-stack" role="status" aria-live="polite"></div>
+  <div id="pl-modal"></div>
+  <script src="/assets/pwa.js"></script>
+  <script type="module" src="/assets/player.js"></script>
+</body>
+</html>

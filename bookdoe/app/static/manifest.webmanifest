@@ -1,0 +1,26 @@
+{
+  "name": "{{app_name}}",
+  "short_name": "{{app_name}}",
+  "description": "Every Story. One Library. Read and listen from the shelf, online or off.",
+  "id": "/app",
+  "start_url": "/app#home",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "lang": "en",
+  "categories": ["books", "entertainment"],
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/assets/brand/bookdoe-mark.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Continue", "url": "/app#home", "icons": [{ "src": "/assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Library", "url": "/app#library" },
+    { "name": "Discover", "url": "/app#discover" }
+  ]
+}

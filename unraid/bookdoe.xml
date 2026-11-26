@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>bookdoe</Name>
+  <Repository>bookdoe:local</Repository>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://git.adaslaw.com/ada</Support>
+  <Project>https://git.adaslaw.com/ada</Project>
+  <Overview>Self-hosted library for ebooks and audiobooks. Adopts the files you already have and serves a web Player, OPDS and the iOS and Android apps. Hobby project, best-effort support. Needs an OpenReads container (metadata service) reachable at the OpenReads URL below; the Compose file in the repository runs both. Acquisition features are optional and off by default; you are responsible for lawful use of them. Replace the Repository above with a published image once one exists, or build bookdoe:local from the repository first (see docs/UNRAID.md).</Overview>
+  <Category>MediaServer:Books MediaServer:Other</Category>
+  <WebUI>http://[IP]:[PORT:8787]/setup</WebUI>
+  <TemplateURL/>
+  <Icon/>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
+  <Config Name="WebUI port" Target="8787" Default="8795" Mode="tcp" Description="Port of the web Player and /manage" Type="Port" Display="always" Required="true" Mask="false">8795</Config>
+  <Config Name="Config" Target="/config" Default="/mnt/user/appdata/bookdoe" Mode="rw" Description="Database, backups, covers, setup.env" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/bookdoe</Config>
+  <Config Name="Ebooks" Target="/books" Default="/mnt/user/ebooks" Mode="ro" Description="Existing ebooks (read-only, adopted in place)" Type="Path" Display="always" Required="false" Mask="false">/mnt/user/ebooks</Config>
+  <Config Name="Audiobooks" Target="/audiobooks" Default="/mnt/user/audiobooks" Mode="ro" Description="Existing audiobooks (read-only, adopted in place)" Type="Path" Display="always" Required="false" Mask="false">/mnt/user/audiobooks</Config>
+  <Config Name="OpenReads URL" Target="OPENREADS_URL" Default="http://openreads:8790" Mode="" Description="Address of the OpenReads metadata container" Type="Variable" Display="always" Required="true" Mask="false">http://openreads:8790</Config>
+  <Config Name="Public URL" Target="BOOKDOE_PUBLIC_URL" Default="" Mode="" Description="External HTTPS URL (the iOS app needs HTTPS for non-local hosts)" Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="User id that owns the media" Type="Variable" Display="advanced" Required="false" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Group id that owns the media" Type="Variable" Display="advanced" Required="false" Mask="false">100</Config>
+  <Config Name="UMASK" Target="UMASK" Default="002" Mode="" Description="" Type="Variable" Display="advanced" Required="false" Mask="false">002</Config>
+</Container>

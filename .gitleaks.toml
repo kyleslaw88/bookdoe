@@ -1,0 +1,52 @@
+# gitleaks configuration (https://github.com/gitleaks/gitleaks).
+# `make secret-scan` runs gitleaks when installed; bookdoe/tests/test_repo_hygiene.py
+# applies the same rules in pure Python so CI never depends on the binary.
+title = "bookdoe"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "bookdoe-api-key"
+description = "bookdoe API key or device token"
+regex = '''\b(alex|alxd)_[A-Za-z0-9_\-]{30,}'''
+
+[[rules]]
+id = "infisical-service-token"
+description = "Infisical service token"
+regex = '''\bst\.[a-f0-9\-]{36}\.[a-f0-9\-]{36}\.[a-f0-9]{32}'''
+
+[[rules]]
+id = "private-ipv4"
+description = "Private IPv4 literal outside tests (examples belong in docs as placeholders)"
+regex = '''\b(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b'''
+
+[rules.allowlist]
+description = "Docker's default bridge subnet used as a documented example"
+regexes = ['''^172\.18\.0\.0$''']
+
+[allowlist]
+# Commits from before the portability scrub. Triaged 2026-10-11 (secpipe onboarding): every hit
+# in them is a portability marker from the custom rules above (host paths, NAS/Spark hostnames,
+# the personal domain, private IPv4 in docs and compose files) plus one generic-api-key false
+# positive in .env.example; no credential. The values are no longer in the tree.
+paths = [
+  '''bookdoe/tests/.*''',
+  '''openreads/tests/.*''',
+  '''\.gitleaks\.toml''',
+  '''package-lock\.json''',
+  # Append-only PR gate ledger; CODING.md forbids editing it by hand.
+  '''docs/VNEXT_LEDGER\.md''',
+]
+regexes = [
+  '''change-me''',
+  '''example\.(com|invalid|org)''',
+  '''pytest-secret-key''',
+  '''qa-secret-key''',
+  '''ui(test|gate)-secret-key''',
+  # Documented example CIDRs in docs/SECURITY.md and docs/INSTALL.md.
+  '''172\.18\.0\.0/16''',
+  '''10\.0\.0\.0/(8|24)''',
+  # generic-api-key matched an empty `..._KEY=` line plus the next line's flag in .env.example.
+  '''^BOOKDOE_SCHEDULER_ENABLED=0$''',
+]

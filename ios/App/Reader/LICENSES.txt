@@ -1,0 +1,3 @@
+epub.js 0.3.93: BSD-2-Clause, https://github.com/futurepress/epub.js
+JSZip 3.10.1: MIT (dual MIT or GPLv3; used under MIT), https://github.com/Stuk/jszip
+Both files are the unmodified builds the web app pins (see bookdoe/app/static/consume.js).

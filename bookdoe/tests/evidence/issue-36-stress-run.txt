@@ -1,0 +1,22 @@
+Issue #36 stress run: 10 consecutive full bookdoe test-suite runs, each from a clean
+state (fresh interpreter, fresh TMPDIR, no pytest cache), stopping on the first failure.
+Produced by bookdoe/scripts/stress_suite.sh on 2026-10-04 against the merged
+agent/issue-36 branch (Python 3.12, Linux). Before the fix about 1 in 3 runs failed with
+sqlite3.OperationalError: disk I/O error in
+tests/test_scan_candidates_api.py::test_list_is_paginated_like_library_and_wanted.
+
+$ . "$HOME/va/bin/activate" && bookdoe/scripts/stress_suite.sh
+command: (cd bookdoe && PYTHONPATH=. python -m pytest -o addopts= -q -p no:cacheprovider) x 10, fresh TMPDIR per run
+run  1/10: exit 0 (37s) 761 passed, 16 skipped, 1 warning in 36.27s
+run  2/10: exit 0 (37s) 761 passed, 16 skipped, 1 warning in 35.79s
+run  3/10: exit 0 (36s) 761 passed, 16 skipped, 1 warning in 35.69s
+run  4/10: exit 0 (35s) 761 passed, 16 skipped, 1 warning in 34.23s
+run  5/10: exit 0 (34s) 761 passed, 16 skipped, 1 warning in 33.83s
+run  6/10: exit 0 (36s) 761 passed, 16 skipped, 1 warning in 35.09s
+run  7/10: exit 0 (36s) 761 passed, 16 skipped, 1 warning in 35.74s
+run  8/10: exit 0 (35s) 761 passed, 16 skipped, 1 warning in 35.12s
+run  9/10: exit 0 (37s) 761 passed, 16 skipped, 1 warning in 36.49s
+run 10/10: exit 0 (37s) 761 passed, 16 skipped, 1 warning in 35.83s
+result: 10/10 consecutive full-suite runs passed (exit 0)
+$ echo $?
+0

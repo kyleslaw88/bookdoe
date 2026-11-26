@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Self-hosted media servers on a home LAN are often plain HTTP (no certificate
+  for a private address). This config lets the app talk to any host over
+  cleartext while HTTPS servers keep normal certificate validation (system
+  trust store only, no user-added CAs). The trade-off and the Play Console
+  justification are in docs/ANDROID_BUILD.md. Users who only reach HTTPS
+  servers can set cleartextTrafficPermitted to false before publishing.
+-->
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config cleartextTrafficPermitted="true" tools:ignore="InsecureBaseConfiguration">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

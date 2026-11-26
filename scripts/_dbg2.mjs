@@ -1,0 +1,12 @@
+import { chromium, devices } from 'playwright';
+const BASE=process.env.UI_BASE; const b=await chromium.launch();
+const ctx=await b.newContext({...devices['iPhone 13'],viewport:{width:390,height:560},hasTouch:true}); const p=await ctx.newPage();
+await p.goto(`${BASE}/manage#dashboard`,{waitUntil:'load'}); await p.waitForSelector('#nav a');
+await p.click('#menu-toggle'); await p.waitForTimeout(400);
+await p.evaluate(()=>{const nav=document.querySelector('#nav'); nav.scrollTop=nav.scrollHeight;}); await p.waitForTimeout(200);
+const box=await p.$eval('#nav a[data-route="settings"]',a=>a.getBoundingClientRect().toJSON());
+const hit=await p.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return el?el.tagName+'#'+el.id+'.'+el.className+' route='+(el.closest('[data-route]')?.dataset.route):null},{x:box.x+box.width/2,y:box.y+box.height/2});
+console.log('box',JSON.stringify(box),'hit',hit);
+await p.mouse.click(box.x+box.width/2, box.y+box.height/2); await p.waitForTimeout(800);
+console.log('hash', await p.evaluate(()=>location.hash), 'open', await p.evaluate(()=>document.querySelector('#sidebar').classList.contains('open')));
+await b.close();

@@ -1,0 +1,85 @@
+# bookdoe + OpenReads. Host paths and ports come from the root .env (copy
+# .env.example, or run ./install.sh which writes it). Nothing in this file is
+# specific to one machine; every ${VAR:-default} below has a working default that
+# keeps all data under ./data next to this file.
+#
+# Per-service application settings (secret key, auth mode, OIDC, API keys) live in
+# bookdoe/.env and openreads/.env, which the setup wizard or install.sh create.
+# Both are optional at compose level so a first `docker compose up` works before
+# the wizard has run; the wizard then writes /config/setup.env inside the volume.
+name: ${COMPOSE_PROJECT_NAME:-bookdoe}
+
+services:
+  bookdoe:
+    # GIT_SHA / BUILD_TIME stamp the image so the UI can show which build runs
+    # (scripts/deploy.sh exports them; with nothing set the build says "dev").
+    build:
+      context: ./bookdoe
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
+        BUILD_TIME: ${BUILD_TIME:-}
+    # Default: the published multi-arch image. `docker compose up -d --build` builds
+    # from the local context instead (the build: section is the override).
+    image: ${BOOKDOE_IMAGE:-ghcr.io/<owner>/bookdoe:latest}
+    user: "${PUID:-1000}:${PGID:-1000}"
+    container_name: ${BOOKDOE_CONTAINER_NAME:-bookdoe}
+    restart: unless-stopped
+    env_file:
+      - path: ./bookdoe/.env
+        required: false
+    environment:
+      OPENREADS_URL: http://openreads:8790
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      UMASK: ${UMASK:-002}
+      BOOKDOE_PUBLIC_URL: ${BOOKDOE_PUBLIC_URL:-http://localhost:8795}
+    ports:
+      - "${BOOKDOE_PORT:-8795}:8787"
+    volumes:
+      - ${BOOKDOE_CONFIG_DIR:-./data/bookdoe}:/config
+      # Existing libraries: read-only at the Docker layer, adopt-mode in the app.
+      - ${BOOKS_DIR:-./data/books}:/books:ro
+      - ${AUDIOBOOKS_DIR:-./data/audiobooks}:/audiobooks:ro
+      # Download client completed folder (same path the client reports, or set a
+      # remote path mapping in Settings).
+      - ${DOWNLOADS_DIR:-./data/downloads}:/downloads:ro
+      # Frozen Readarr database snapshots for migration, never the live appdata.
+      - ${MIGRATIONS_DIR:-./data/migrations}:/migrations:ro
+      # Managed-import destinations: the only writable media paths.
+      - ${LIBRARY_EBOOKS_DIR:-./data/library/ebooks}:/library/ebooks
+      - ${LIBRARY_AUDIOBOOKS_DIR:-./data/library/audiobooks}:/library/audiobooks
+    depends_on:
+      openreads:
+        condition: service_healthy
+    networks:
+      - books
+
+  openreads:
+    build: ./openreads
+    image: ${OPENREADS_IMAGE:-ghcr.io/ada/openreads:latest}
+    user: "${PUID:-1000}:${PGID:-1000}"
+    container_name: ${OPENREADS_CONTAINER_NAME:-openreads}
+    restart: unless-stopped
+    env_file:
+      - path: ./openreads/.env
+        required: false
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      UMASK: ${UMASK:-002}
+    volumes:
+      - ${OPENREADS_DATA_DIR:-./data/openreads}:/data
+    expose:
+      - "8790"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8790/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - books
+
+networks:
+  books:
+    driver: bridge

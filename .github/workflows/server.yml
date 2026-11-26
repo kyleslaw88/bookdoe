@@ -1,0 +1,60 @@
+# Server CI on GitHub: both test suites, compile checks, the browser-bundle syntax
+# checks, repository hygiene (secret scan) and a Docker build. Mirrors
+# the CI workflow for the GitHub mirror. No secrets are used.
+name: server
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["ios/**", "android/**", ".github/workflows/ios.yml", ".github/workflows/android.yml"]
+  pull_request:
+    paths-ignore: ["ios/**", "android/**", ".github/workflows/ios.yml", ".github/workflows/android.yml"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # gitleaks scans history
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Compile
+        run: python -m compileall -q bookdoe/app openreads
+      - name: Syntax-check the browser bundles
+        run: |
+          node --check bookdoe/app/static/app.js openreads/static/app.js
+          node --check bookdoe/app/static/sw.js bookdoe/app/static/pwa.js
+          sh scripts/check-esm.sh
+      - name: OpenReads tests
+        run: cd openreads && pip install -r requirements.txt pytest && pytest -q
+      - name: bookdoe tests (includes the repository hygiene scan)
+        run: cd bookdoe && pip install -r requirements-dev.txt && PYTHONPATH=. pytest -q -p no:cacheprovider
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # built-in token, read-only use for PR annotations
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: docker compose -f docker-compose.yml build
+      - name: Compose config is valid with defaults
+        run: docker compose config --quiet

@@ -1,0 +1,44 @@
+# Bookdoe PUBLIC DEMO. Isolated: the app sits on an internal-only network (no internet, no LAN),
+# reachable only through the edge proxy. State resets every day (app exits at 11:00 UTC, restarts from the seed).
+# DEMO_DATA holds config/, seed/, media/books, media/audiobooks and podcasts/ (see README.md).
+name: bookdoe-demo
+services:
+  app:
+    image: ${BOOKDOE_IMAGE:-bookdoe:latest}
+    container_name: bookdoe-demo-app
+    restart: unless-stopped
+    entrypoint: ["/usr/bin/tini","--","/demo/demo-entry.sh"]
+    command: ["uvicorn","app.main:app","--host","0.0.0.0","--port","8787","--proxy-headers","--forwarded-allow-ips=*"]
+    env_file: [./demo.env]
+    environment:
+      BOOKDOE_AUTH_MODE: local
+      BOOKDOE_SCHEDULER_ENABLED: "0"
+      BOOKDOE_LLM_ENABLED: "0"
+      BOOKDOE_PUBLIC_URL: ${DEMO_PUBLIC_URL:-http://localhost:8191}
+      PUID: "1000"
+      PGID: "100"
+      UMASK: "002"
+      SEED_MODE: "${SEED_MODE:-}"
+      BOOKDOE_PODCASTS_DIR: /podcasts
+    volumes:
+      - ${DEMO_DATA:-./data}/config:/config
+      - ${DEMO_DATA:-./data}/seed:/seed:ro
+      - ${DEMO_DATA:-./data}/media/books:/books:ro
+      - ${DEMO_DATA:-./data}/media/audiobooks:/audiobooks:ro
+      - ${DEMO_DATA:-./data}/podcasts:/podcasts:ro
+      - ./demo-entry.sh:/demo/demo-entry.sh:ro
+    mem_limit: 1g
+    cpus: 1.5
+    networks: [internal]
+  edge:
+    image: nginxinc/nginx-unprivileged:1.27-alpine
+    container_name: bookdoe-demo-edge
+    restart: unless-stopped
+    depends_on: [app]
+    ports: ["8191:8080"]
+    volumes: ["./edge.conf:/etc/nginx/conf.d/default.conf:ro"]
+    networks: [internal, public]
+networks:
+  internal:
+    internal: true
+  public: {}

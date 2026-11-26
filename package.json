@@ -1,0 +1,8 @@
+{
+  "name": "bookdoe-ui-qa",
+  "private": true,
+  "description": "Browser QA tooling for `make check` (see scripts/README-ui-qa.md)",
+  "devDependencies": {
+    "playwright": "1.64.0"
+  }
+}

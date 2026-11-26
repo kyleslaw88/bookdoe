@@ -1,0 +1,127 @@
+/* Styles for consume.js, the reader and audiobook player shared by both shells
+ * (Player at /app, Management at /manage). consume.js loads this file itself, so a shell
+ * never has to remember to link it.
+ *
+ * Why it exists: Management only loads styles.css, which has no .pl-* rules, so the
+ * player markup rendered as browser-default buttons. With styles.css's `button { color:
+ * inherit }` that meant light text on the UA's light-grey button face in the dark theme
+ * (skip/play/file buttons nearly invisible) and an unstyled time line. The reader and
+ * audio rules moved here from player.css (unchanged), and the block below gives
+ * Management the same --pl-* palette and the few primitives (button, select, row) the
+ * markup relies on. Nothing in it applies inside the Player shell (body.player-body),
+ * which gets those from player.css.
+ */
+
+/* ---------- Management bridge ---------- */
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) {
+  --pl-bg: #0e1116; --pl-surface: #161a21; --pl-surface-2: #1d222b; --pl-line: #252b36;
+  --pl-text: #eef1f5; --pl-muted: #98a2b3; --pl-muted-2: #6b7585; --pl-accent: #7fb3ff; --pl-accent-ink: #0b1220;
+  --pl-good: #5cc89b; --pl-warn: #f0bf6a; --pl-bad: #ff7b86; --pl-radius: 16px; --pl-radius-sm: 10px;
+  --pl-shadow: 0 18px 48px rgba(0,0,0,.35); --pl-nav: 0px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--pl-text);
+}
+html[data-theme="light"] body:not(.player-body) :is(.pl-consume, .pl-reader) {
+  --pl-bg: #f6f7f9; --pl-surface: #ffffff; --pl-surface-2: #f0f2f5; --pl-line: #e2e6ec;
+  --pl-text: #171c24; --pl-muted: #5f6b7d; --pl-muted-2: #8b95a5; --pl-accent: #2c6fd6; --pl-accent-ink: #ffffff;
+  --pl-good: #1d8a5f; --pl-warn: #a86a00; --pl-bad: #c84454; --pl-shadow: 0 16px 40px rgba(30,40,60,.12);
+}
+/* The player sits on its own card so its contrast never depends on Management's page colours. */
+:where(body:not(.player-body) .pl-consume) { background: var(--pl-bg); border: 1px solid var(--pl-line); border-radius: var(--pl-radius); padding: 16px; max-width: 760px; margin: 0 auto; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) { box-sizing: border-box; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) *, :where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) *::before, :where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) *::after { box-sizing: inherit; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) :is(.pl-muted) { color: var(--pl-muted); }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-small { font-size: 12.5px; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) :is(.pl-input, .pl-select) { width: 100%; min-height: 46px; border-radius: 12px; border: 1px solid var(--pl-line); background: var(--pl-surface-2); color: var(--pl-text); padding: 10px 14px; font-size: 15px; outline: none; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 10px 18px; border-radius: 12px; border: 1px solid transparent; background: var(--pl-accent); color: var(--pl-accent-ink); font-weight: 650; font-size: 14px; cursor: pointer; text-decoration: none; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-button.ghost { background: transparent; border-color: var(--pl-line); color: var(--pl-text); }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-button.quiet { background: var(--pl-surface-2); color: var(--pl-text); }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-button.danger { background: color-mix(in srgb, var(--pl-bad) 16%, var(--pl-surface)); color: var(--pl-bad); border-color: color-mix(in srgb, var(--pl-bad) 35%, var(--pl-line)); }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-button.small { min-height: 44px; padding: 6px 12px; font-size: 13px; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-button:disabled { opacity: .5; cursor: default; }
+:where(body:not(.player-body) .pl-consume) .pl-section { margin: 22px 0; }
+:where(body:not(.player-body) .pl-consume) .pl-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+:where(body:not(.player-body) .pl-consume) .pl-section-head h2 { margin: 0; font-size: 17px; font-weight: 680; letter-spacing: -.2px; }
+:where(body:not(.player-body) .pl-consume) .pl-cover { position: relative; aspect-ratio: 2/3; border-radius: 12px; overflow: hidden; background: linear-gradient(155deg, hsl(var(--hue, 200) 40% 28%), hsl(var(--hue, 200) 45% 14%)); }
+:where(body:not(.player-body) .pl-consume) .pl-cover img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; }
+:where(body:not(.player-body) .pl-consume) .pl-cover .pl-fallback { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end; background: linear-gradient(160deg, hsl(var(--hue) 45% 30%), hsl(var(--hue) 50% 16%)); color: #fff; }
+:where(body:not(.player-body) .pl-consume) .pl-cover .pl-fallback strong { font-size: 13px; line-height: 1.3; }
+:where(body:not(.player-body) .pl-reader, body:not(.player-body) .pl-consume) .pl-empty { padding: 36px 18px; text-align: center; color: var(--pl-muted); background: var(--pl-surface); border: 1px dashed var(--pl-line); border-radius: var(--pl-radius); font-size: 14px; }
+:where(body:not(.player-body) .pl-consume, body:not(.player-body) .pl-reader) .pl-empty strong { display: block; color: var(--pl-text); margin-bottom: 4px; }
+:where(body:not(.player-body) .pl-reader) :is(.pl-setting) { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--pl-line); }
+:where(body:not(.player-body) .pl-reader) .pl-setting strong { display: block; font-size: 14px; font-weight: 640; }
+:where(body:not(.player-body) .pl-reader) .pl-setting span { display: block; font-size: 12.5px; color: var(--pl-muted); margin-top: 2px; }
+:where(body:not(.player-body) .pl-reader) .pl-segment { display: inline-flex; border: 1px solid var(--pl-line); border-radius: 12px; overflow: hidden; }
+:where(body:not(.player-body) .pl-reader) .pl-segment button { min-height: 44px; min-width: 44px; padding: 6px 12px; border: 0; background: var(--pl-surface); color: var(--pl-muted); cursor: pointer; font-weight: 600; font-size: 13px; }
+:where(body:not(.player-body) .pl-reader) .pl-segment button.on { background: var(--pl-text); color: var(--pl-bg); }
+
+/* ---------- reader ---------- */
+.pl-reader { position: fixed; inset: 0; z-index: 50; background: var(--rd-bg, var(--pl-bg)); color: var(--rd-fg, var(--pl-text)); display: flex; flex-direction: column; }
+.pl-reader-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; background: color-mix(in srgb, var(--pl-surface) 92%, transparent); border-bottom: 1px solid var(--pl-line); transition: opacity .2s; }
+.pl-reader-bar.bottom { border-bottom: 0; border-top: 1px solid var(--pl-line); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+.pl-reader.immersive .pl-reader-bar { opacity: 0; pointer-events: none; }
+.pl-reader-title { flex: 1; min-width: 0; text-align: center; font-size: 13px; color: var(--pl-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-reader-stage { flex: 1; min-height: 0; position: relative; }
+.pl-reader-stage iframe { border: 0; width: 100%; height: 100%; }
+.pl-reader-tap { position: absolute; top: 0; bottom: 0; width: 18%; z-index: 2; }
+.pl-reader-tap.left { left: 0; } .pl-reader-tap.right { right: 0; }
+.pl-reader-pos { font-size: 12.5px; color: var(--pl-muted); min-width: 60px; text-align: center; }
+.pl-reader-panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(360px, 100%); background: var(--pl-surface); border-left: 1px solid var(--pl-line); z-index: 5; overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: var(--pl-shadow); }
+.pl-reader-panel h3 { margin: 0 0 12px; font-size: 15px; }
+.pl-toc a, .pl-bm { display: block; padding: 10px 8px; border-radius: 10px; color: var(--pl-text); font-size: 14px; border-bottom: 1px solid color-mix(in srgb, var(--pl-line) 60%, transparent); cursor: pointer; }
+.pl-toc a.depth-1 { padding-left: 24px; font-size: 13px; color: var(--pl-muted); }
+.pl-bm { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.pl-bm small { color: var(--pl-muted); }
+.pl-reader-settings .pl-setting { padding: 10px 0; }
+
+/* ---------- audio player ---------- */
+.pl-player { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; max-width: 720px; margin: 0 auto; }
+/* 30dvh keeps the transport row on screen on a 390x844 phone instead of below the cover */
+.pl-player .pl-cover { width: min(300px, 70vw, 30dvh); margin: 0 auto; box-shadow: var(--pl-shadow); }
+.pl-player h1 { margin: 0; font-size: 22px; text-align: center; letter-spacing: -.3px; }
+.pl-player .pl-by { text-align: center; }
+.pl-chapter-now { text-align: center; color: var(--pl-muted); font-size: 13.5px; min-height: 18px; }
+.pl-scrub { width: 100%; }
+.pl-scrub input[type=range] { width: 100%; accent-color: var(--pl-accent); height: 32px; }
+.pl-times { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--pl-muted); font-variant-numeric: tabular-nums; }
+.pl-transport { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 14px); }
+.pl-transport .pl-button { min-width: 52px; min-height: 52px; padding: 0 6px; border-radius: 50%; font-size: 15px; flex: 0 0 auto; }
+.pl-transport .pl-button.play { min-width: 68px; min-height: 68px; font-size: 26px; }
+@media (min-width: 440px) {
+  .pl-transport .pl-button { min-width: 58px; min-height: 58px; }
+  .pl-transport .pl-button.play { min-width: 76px; min-height: 76px; }
+}
+.pl-transport .pl-button svg { display: block; width: 22px; height: 22px; }
+.pl-transport .pl-button.play svg { width: 30px; height: 30px; }
+.pl-player-extras { display: flex; justify-content: center; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
+.pl-tracks { display: flex; flex-direction: column; gap: 4px; }
+.pl-track { display: flex; justify-content: space-between; gap: 10px; align-items: center; min-height: 48px; padding: 8px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--pl-surface); color: inherit; cursor: pointer; text-align: left; font-size: 14px; }
+.pl-track.active { border-color: var(--pl-accent); }
+.pl-track small { color: var(--pl-muted); font-variant-numeric: tabular-nums; }
+
+
+@media (min-width: 820px) {
+  .pl-player { grid-template-columns: 300px minmax(0, 1fr); align-items: start; }
+  .pl-player .pl-cover { margin: 0; width: 300px; }
+  .pl-player h1, .pl-player .pl-by, .pl-chapter-now { text-align: left; }
+}
+
+/* ---------- audio controls: contrast, targets, states (WCAG 2.1 AA) ----------
+ * Text and glyphs are >= 4.5:1 on their own background, control edges >= 3:1 against
+ * what surrounds them, targets >= 44 px, focus is a 3 px ring in the accent colour,
+ * and a disabled control is dimmed (and dashed) but still readable at >= 3:1.
+ * scripts/ui-player-e2e.mjs measures all of it in both themes in both shells. */
+.pl-consume { --pl-edge: #6f7b8f; --pl-disabled-ink: #7a8699; --pl-focus: var(--pl-accent); }
+html[data-theme="light"] .pl-consume { --pl-edge: #7b8696; --pl-disabled-ink: #6b7585; }
+.pl-consume :is(button, select, input[type=range]):focus-visible { outline: 3px solid var(--pl-focus); outline-offset: 3px; }
+.pl-consume .pl-button, .pl-consume .pl-select, .pl-consume .pl-track { border: 1px solid var(--pl-edge); }
+.pl-consume .pl-button.play { border-color: transparent; }
+.pl-consume .pl-button:disabled { opacity: 1; background: transparent; color: var(--pl-disabled-ink); border-style: dashed; cursor: default; }
+.pl-consume .pl-track.active { border-color: var(--pl-accent); box-shadow: inset 0 0 0 1px var(--pl-accent); }
+.pl-consume .pl-select, .pl-consume .pl-button.small { min-height: 44px; }
+.pl-consume .pl-muted, .pl-consume .pl-chapter-now, .pl-consume .pl-track small { color: var(--pl-muted); }
+.pl-consume .pl-times { justify-content: center; text-align: center; gap: 0 .35em; flex-wrap: wrap; font-size: 14px; letter-spacing: .1px; color: var(--pl-text); }
+.pl-scrub input[type=range] { min-height: 44px; }
+.pl-scrub input[type=range]:disabled { opacity: .55; }
+.pl-notice { padding: 10px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--pl-warn) 55%, var(--pl-line)); background: color-mix(in srgb, var(--pl-warn) 12%, var(--pl-surface)); color: var(--pl-text); font-size: 14px; line-height: 1.45; text-align: center; }
+.pl-notice[hidden] { display: none; }

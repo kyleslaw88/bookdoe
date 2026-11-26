@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{app_name}} setup</title>
+<link rel="icon" type="image/svg+xml" href="/assets/brand/bookdoe-mark.svg">
+<link rel="stylesheet" href="/assets/player.css">
+<style>
+  .setup { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  .setup h1 { margin-bottom: .25rem; }
+  .steps { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; font-size: .9rem; }
+  .steps span { padding: .25rem .6rem; border-radius: 999px; background: rgba(127,127,127,.15); }
+  .steps span.on { background: var(--accent, #3a6ea5); color: #fff; }
+  .card { border: 1px solid rgba(127,127,127,.3); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  label { display: block; margin: .6rem 0 .2rem; font-weight: 600; }
+  input, select { width: 100%; padding: .5rem; border-radius: 8px; border: 1px solid rgba(127,127,127,.4); font: inherit; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .actions { display: flex; justify-content: space-between; gap: .5rem; margin-top: 1rem; }
+  button { padding: .55rem 1rem; border-radius: 8px; border: 0; font: inherit; cursor: pointer; }
+  button.primary { background: var(--accent, #3a6ea5); color: #fff; }
+  .muted { opacity: .75; font-size: .9rem; }
+  .ok { color: #2a8a3e; } .bad { color: #b42318; }
+  .root { border-top: 1px dashed rgba(127,127,127,.3); padding-top: .5rem; margin-top: .5rem; }
+  .hidden { display: none; }
+  pre { white-space: pre-wrap; font-size: .85rem; }
+</style>
+</head>
+<body>
+<main class="setup">
+  <h1>Set up {{app_name}}</h1>
+  <p class="muted">This wizard runs once, while the install has no accounts. Everything it writes goes to the config volume (<code id="env-file"></code>), never into the image.</p>
+  <div class="steps">
+    <span data-step="0" class="on">1 Administrator</span><span data-step="1">2 Libraries</span><span data-step="2">3 Metadata</span><span data-step="3">4 Secrets</span><!--ACQ--><span data-step="acq">Acquisition</span><!--/ACQ--><span data-step="4">5 Review</span>
+  </div>
+
+  <section class="card" data-panel="0">
+    <h2>Administrator</h2>
+    <p class="muted">A local account. You can add people or connect an identity provider later in Management.</p>
+    <label for="admin-username">Username</label><input id="admin-username" value="admin" autocomplete="username">
+    <label for="admin-password">Password (at least 12 characters)</label><input id="admin-password" type="password" autocomplete="new-password">
+    <label for="admin-email">Email (optional)</label><input id="admin-email" type="email" autocomplete="email">
+    <label for="public-url">Public URL</label><input id="public-url" placeholder="https://books.example.com">
+    <p class="muted">The address people and the mobile app use to reach this server. Needed for sign-in links and device pairing.</p>
+  </section>
+
+  <section class="card hidden" data-panel="1">
+    <h2>Libraries</h2>
+    <p class="muted">Paths as seen <em>inside</em> the container: the Compose file mounts your ebooks at <code>/books</code>, audiobooks at <code>/audiobooks</code>, and managed-import destinations at <code>/library/ebooks</code> and <code>/library/audiobooks</code>. "Adopt" never moves or renames files; only "Managed" roots are written to.</p>
+    <div id="roots"></div>
+    <button type="button" id="add-root">Add another root</button>
+  </section>
+
+  <section class="card hidden" data-panel="2">
+    <h2>Metadata sources</h2>
+    <p class="muted">OpenReads (bundled) talks to Open Library and Google Books for you. API keys are optional and raise rate limits.</p>
+    <label for="openreads-url">OpenReads URL</label><input id="openreads-url" placeholder="http://openreads:8790">
+    <label for="google-key">Google Books API key (optional)</label><input id="google-key" autocomplete="off">
+    <label for="hardcover-key">Hardcover API key (optional)</label><input id="hardcover-key" autocomplete="off">
+    <label for="abdb-key">AudiobookDB API key (optional)</label><input id="abdb-key" autocomplete="off">
+  </section>
+
+  <section class="card hidden" data-panel="3">
+    <h2>Secrets backend</h2>
+    <label for="secrets-backend">Where should credentials come from?</label>
+    <select id="secrets-backend"><option value="env">Environment and the config volume (default)</option><option value="infisical">Infisical (machine identity)</option></select>
+    <div id="infisical" class="hidden">
+      <div class="row">
+        <div><label for="inf-site">Site URL</label><input id="inf-site" value="https://app.infisical.com"></div>
+        <div><label for="inf-project">Project ID</label><input id="inf-project"></div>
+        <div><label for="inf-client-id">Client ID</label><input id="inf-client-id" autocomplete="off"></div>
+        <div><label for="inf-client-secret">Client secret</label><input id="inf-client-secret" type="password" autocomplete="off"></div>
+        <div><label for="inf-env">Environment</label><input id="inf-env" value="prod"></div>
+        <div><label for="inf-path">Secret path</label><input id="inf-path" value="/"></div>
+      </div>
+      <p class="muted">{{app_name}} asks Infisical for any credential the environment does not provide, and expands <code>infisical://NAME</code> references. See docs/SECRETS.md.</p>
+    </div>
+  </section>
+
+<!--ACQ-->
+  <section class="card hidden" data-panel="acq">
+    <h2>Acquisition (optional)</h2>
+    <p class="muted">Add an indexer and a download client now, or leave these blank and add them later in Management.</p>
+    <div class="row">
+      <div><label for="idx-name">Indexer name</label><input id="idx-name"></div>
+      <div><label for="idx-kind">Indexer type</label><select id="idx-kind"><option>prowlarr</option><option>newznab</option><option>torznab</option></select></div>
+      <div><label for="idx-url">Indexer URL</label><input id="idx-url"></div>
+      <div><label for="idx-key">Indexer API key</label><input id="idx-key" type="password" autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <div><label for="dc-name">Download client name</label><input id="dc-name"></div>
+      <div><label for="dc-kind">Download client type</label><select id="dc-kind"><option>sabnzbd</option><option>qbittorrent</option><option>nzbget</option><option>transmission</option></select></div>
+      <div><label for="dc-url">Download client URL</label><input id="dc-url"></div>
+      <div><label for="dc-key">API key</label><input id="dc-key" type="password" autocomplete="off"></div>
+    </div>
+  </section>
+<!--/ACQ-->
+
+  <section class="card hidden" data-panel="4">
+    <h2>Review and connectivity checks</h2>
+    <button type="button" id="run-checks">Run checks</button>
+    <pre id="check-results" class="muted"></pre>
+    <p class="muted">Finishing creates the administrator, adds the roots and writes the variables. If a variable needs a restart (public URL, OpenReads URL, secrets backend, API keys), the result says so.</p>
+  </section>
+
+  <section class="card hidden" data-panel="done">
+    <h2>Done</h2>
+    <pre id="done"></pre>
+    <a class="pl-button" href="/manage">Open Management</a>
+  </section>
+
+  <div class="actions">
+    <button type="button" id="back">Back</button>
+    <button type="button" id="next" class="primary">Next</button>
+  </div>
+  <p id="msg" class="bad"></p>
+</main>
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var step = 0, csrf = null;
+  // The panels present in this page, in order: the optional extra panel is served only when enabled.
+  var order = Array.prototype.map.call(document.querySelectorAll('[data-panel]'), function (p) { return p.dataset.panel; });
+  var last = order.length - 1, review = last - 1;
+  document.querySelectorAll('[data-step]').forEach(function (s) { s.textContent = (order.indexOf(s.dataset.step) + 1) + ' ' + s.textContent.replace(/^\d+ /, ''); });
+  var rootsEl = $('#roots');
+
+  function show(n) {
+    step = n;
+    document.querySelectorAll('[data-panel]').forEach(function (p) { p.classList.toggle('hidden', p.dataset.panel !== order[n]); });
+    document.querySelectorAll('[data-step]').forEach(function (s) { s.classList.toggle('on', s.dataset.step === order[n]); });
+    $('#back').classList.toggle('hidden', n === 0 || n === last);
+    $('#next').textContent = n === review ? 'Finish' : 'Next';
+    $('#next').classList.toggle('hidden', n === last);
+    $('#msg').textContent = '';
+  }
+
+  function addRoot(preset) {
+    preset = preset || {};
+    var div = document.createElement('div');
+    div.className = 'root';
+    div.innerHTML = '<div class="row"><div><label>Name</label><input class="r-name"></div><div><label>Path in container</label><input class="r-path"></div>' +
+      '<div><label>Kind</label><select class="r-kind"><option value="ebook">Ebooks</option><option value="audiobook">Audiobooks</option><option value="podcasts">Podcasts</option><option value="mixed">Mixed</option></select></div>' +
+      '<div><label>Mode</label><select class="r-mode"><option value="adopt">Adopt in place (read-only)</option><option value="observe">Observe only</option><option value="managed">Managed (writable, imports land here)</option></select></div></div>' +
+      '<button type="button" class="r-remove">Remove</button>';
+    div.querySelector('.r-name').value = preset.name || '';
+    div.querySelector('.r-path').value = preset.path || '';
+    div.querySelector('.r-kind').value = preset.media_kind || 'ebook';
+    div.querySelector('.r-mode').value = preset.management_mode || 'adopt';
+    div.querySelector('.r-remove').onclick = function () { div.remove(); };
+    rootsEl.appendChild(div);
+  }
+
+  function roots() {
+    return Array.prototype.map.call(rootsEl.querySelectorAll('.root'), function (d) {
+      var kind = d.querySelector('.r-kind').value, pod = kind === 'podcasts';
+      // A podcasts library is a library type, not a media kind; the server stores it as a read-only audiobook-kind root.
+      return { name: d.querySelector('.r-name').value.trim(), path: d.querySelector('.r-path').value.trim(),
+               media_kind: pod ? 'audiobook' : kind, library_type: pod ? 'podcasts' : 'books',
+               management_mode: d.querySelector('.r-mode').value };
+    }).filter(function (r) { return r.name && r.path; });
+  }
+
+  function secrets() {
+    var backend = $('#secrets-backend').value;
+    var out = { backend: backend };
+    if (backend === 'infisical') {
+      out.infisical = { site_url: $('#inf-site').value.trim() || 'https://app.infisical.com', project_id: $('#inf-project').value.trim(),
+                        client_id: $('#inf-client-id').value.trim(), client_secret: $('#inf-client-secret').value,
+                        environment: $('#inf-env').value.trim() || 'prod', secret_path: $('#inf-path').value.trim() || '/' };
+    }
+    return out;
+  }
+
+  function metadata() {
+    var m = {};
+    var url = $('#openreads-url').value.trim(); if (url) m.openreads_url = url;
+    var g = $('#google-key').value.trim(); if (g) m.google_books_api_key = g;
+    var h = $('#hardcover-key').value.trim(); if (h) m.hardcover_api_key = h;
+    var a = $('#abdb-key').value.trim(); if (a) m.audiobookdb_api_key = a;
+    return m;
+  }
+
+  function payload() {
+    return { admin: { username: $('#admin-username').value.trim() || 'admin', password: $('#admin-password').value, email: $('#admin-email').value.trim() || null },
+             public_url: $('#public-url').value.trim() || null, roots: roots(), metadata: metadata(), secrets: secrets() };
+  }
+
+  function extras() { return Promise.resolve([]); }
+
+  /*ACQ*/
+  // The optional indexer and download client (present only while acquisition is on), added once the administrator's session exists.
+  extras = function () {
+    var jobs = [], lines = [];
+    if ($('#idx-name').value.trim() && $('#idx-url').value.trim()) {
+      jobs.push(api('/api/v1/indexers', { name: $('#idx-name').value.trim(), kind: $('#idx-kind').value, base_url: $('#idx-url').value.trim(), api_key: $('#idx-key').value || null })
+        .then(function () { lines.push('Indexer ' + $('#idx-name').value.trim() + ': created'); })
+        .catch(function (e) { lines.push('Indexer not added: ' + e.message); }));
+    }
+    if ($('#dc-name').value.trim() && $('#dc-url').value.trim()) {
+      jobs.push(api('/api/v1/download-clients', { name: $('#dc-name').value.trim(), kind: $('#dc-kind').value, base_url: $('#dc-url').value.trim(), api_key: $('#dc-key').value || null })
+        .then(function () { lines.push('Download client ' + $('#dc-name').value.trim() + ': created'); })
+        .catch(function (e) { lines.push('Download client not added: ' + e.message); }));
+    }
+    return Promise.all(jobs).then(function () { return lines; });
+  }
+  /*/ACQ*/
+
+  function api(path, body) {
+    return fetch(path, { method: body ? 'POST' : 'GET', headers: Object.assign({ 'Content-Type': 'application/json' }, csrf ? { 'X-CSRF-Token': csrf } : {}),
+                         body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin' })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) { throw new Error(j.detail ? (typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)) : r.statusText); } return j; }); });
+  }
+
+  function validate() {
+    if (step === 0) {
+      if ($('#admin-password').value.length < 12) { return 'The password needs at least 12 characters.'; }
+    }
+    if (order[step] === '3' && $('#secrets-backend').value === 'infisical') {
+      var s = secrets().infisical;
+      if (!s.project_id || !s.client_id || !s.client_secret) { return 'Infisical needs a project id, client id and client secret.'; }
+    }
+    return null;
+  }
+
+  $('#secrets-backend').onchange = function () { $('#infisical').classList.toggle('hidden', this.value !== 'infisical'); };
+  $('#add-root').onclick = function () { addRoot(); };
+  $('#back').onclick = function () { show(Math.max(0, step - 1)); };
+  $('#run-checks').onclick = function () {
+    $('#check-results').textContent = 'Checking...';
+    var p = payload();
+    api('/api/v1/setup/check', { roots: p.roots, metadata: p.metadata, secrets: p.secrets })
+      .then(function (r) {
+        var lines = [];
+        r.paths.forEach(function (x) { lines.push((x.ok ? 'OK   ' : 'FAIL ') + x.name + ' (' + x.path + ')' + (x.error ? ': ' + x.error : x.entries != null ? ': ' + x.entries + ' entries' : '')); });
+        lines.push((r.openreads.ok ? 'OK   ' : 'WARN ') + 'OpenReads ' + r.openreads.url + (r.openreads.error ? ': ' + r.openreads.error : ''));
+        lines.push((r.secrets.ok ? 'OK   ' : 'FAIL ') + 'Secrets backend ' + r.secrets.backend + (r.secrets.error ? ': ' + r.secrets.error : ''));
+        $('#check-results').textContent = lines.join('\n');
+      })
+      .catch(function (e) { $('#check-results').textContent = 'Check failed: ' + e.message; });
+  };
+  $('#next').onclick = function () {
+    var err = validate();
+    if (err) { $('#msg').textContent = err; return; }
+    if (step < review) { show(step + 1); return; }
+    $('#next').disabled = true;
+    api('/api/v1/setup/complete', payload())
+      .then(function (r) {
+        csrf = r.csrf;
+        var lines = ['Administrator created: ' + $('#admin-username').value];
+        r.roots.forEach(function (x) { lines.push('Root ' + x.name + ': ' + x.status + (x.error ? ' (' + x.error + ')' : '')); });
+        lines.push('Variables written to ' + r.env_file);
+        if (r.restart_required) { lines.push('Restart the container to apply the new variables: docker compose restart bookdoe'); }
+        return extras().then(function (more) {
+          $('#done').textContent = lines.concat(more).join('\n');
+          show(last);
+        });
+      })
+      .catch(function (e) { $('#msg').textContent = e.message; $('#next').disabled = false; });
+  };
+
+  api('/api/v1/setup/status').then(function (s) {
+    $('#env-file').textContent = s.env_file;
+    if (!s.setup_required) { location.replace('/manage'); return; }
+    if (s.public_url) { $('#public-url').value = s.public_url; }
+    $('#openreads-url').placeholder = s.openreads_url || 'http://openreads:8790';
+    addRoot({ name: 'Ebooks', path: '/books', media_kind: 'ebook' });
+    addRoot({ name: 'Audiobooks', path: '/audiobooks', media_kind: 'audiobook' });
+  }).catch(function (e) { $('#msg').textContent = e.message; });
+  show(0);
+})();
+</script>
+</body>
+</html>

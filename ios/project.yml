@@ -1,0 +1,125 @@
+# XcodeGen spec (https://github.com/yonaskolb/XcodeGen). Run `xcodegen generate`
+# in this directory to produce Bookdoe.xcodeproj; the project file is not
+# committed. Signing and the team id are set on the Mac (docs/IOS_BUILD.md).
+name: Bookdoe
+options:
+  bundleIdPrefix: com.bookdoe   # the real id is injected from the BUNDLE_ID secret (ios.yml)
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.3"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "40"
+    GIT_SHA: "unknown"                       # overridden on the xcodebuild command line with the pushed commit
+    DEVELOPMENT_TEAM: ""                    # set in Xcode: Signing & Capabilities, or via DEVELOPMENT_TEAM=... on xcodebuild
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+packages:
+  BookdoeKit:
+    path: Packages/BookdoeKit
+
+targets:
+  Bookdoe:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    entitlements:
+      path: App/Bookdoe.entitlements
+      properties:
+        keychain-access-groups: []
+        # CarPlay Audio entitlement (approved by Apple). Device builds need a provisioning
+        # profile that carries it; see docs/CARPLAY_SETUP.md.
+        com.apple.developer.carplay-audio: true
+    dependencies:
+      - package: BookdoeKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bookdoe.app   # CI overrides with the BUNDLE_ID secret (App Store Connect record)
+        PRODUCT_NAME: bookdoe
+        # Pinned host(s), comma separated. Set per build from a repo secret; empty = no pinning.
+        BOOKDOE_PINNED_HOSTS: ""
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        TARGETED_DEVICE_FAMILY: "1,2"
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: bookdoe
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        GitSHA: $(GIT_SHA)
+        UIBackgroundModes: [audio, fetch]
+        NSAppTransportSecurity:
+          # Plain HTTP is allowed only to local-network hosts (NSAllowsLocalNetworking).
+          # The global NSAllowsArbitraryLoads exception was removed (F-1, #433);
+          # public servers must be reached over HTTPS.
+          NSAllowsLocalNetworking: true
+        BookdoePinnedHosts: $(BOOKDOE_PINNED_HOSTS)
+        NSLocalNetworkUsageDescription: bookdoe connects to media servers on your local network.
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).PhoneSceneDelegate
+            CPTemplateApplicationSceneSessionRoleApplication:
+              - UISceneConfigurationName: CarPlay
+                UISceneClassName: CPTemplateApplicationScene
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).CarPlaySceneDelegate
+        ITSAppUsesNonExemptEncryption: false
+
+  BookdoeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Bookdoe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bookdoe.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+        # The app's PRODUCT_NAME is lowercase, so the generated test host path (Bookdoe.app) does not exist.
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/bookdoe.app/bookdoe
+        BUNDLE_LOADER: $(TEST_HOST)
+
+  BookdoeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+        excludes: ["Fixtures"]
+    dependencies:
+      - target: Bookdoe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bookdoe.app.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Bookdoe:
+    build:
+      targets:
+        Bookdoe: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - package: BookdoeKit/BookdoeKitTests
+        - BookdoeTests
+        - BookdoeUITests
+    archive:
+      config: Release

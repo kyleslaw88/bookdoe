@@ -1,0 +1,19 @@
+# Standalone OpenReads (without bookdoe). The root docker-compose.yml runs both.
+services:
+  openreads:
+    build: .
+    container_name: ${OPENREADS_CONTAINER_NAME:-openreads}
+    ports:
+      - "${OPENREADS_PORT:-8790}:8790"
+    volumes:
+      - ${OPENREADS_DATA_DIR:-./data}:/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8790/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

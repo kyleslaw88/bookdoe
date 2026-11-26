@@ -1,0 +1,11 @@
+{
+  "type": "music",
+  "domain": "bookdoe",
+  "name": "bookdoe",
+  "description": "Play audiobooks and podcasts from your bookdoe server, with resume position and progress synced back.",
+  "codeowners": ["@ada"],
+  "requirements": ["httpx>=0.27"],
+  "documentation": "https://github.com/bookdoe/bookdoe/blob/main/docs/MUSIC_ASSISTANT.md",
+  "multi_instance": true,
+  "builtin": false
+}
